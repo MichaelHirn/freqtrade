@@ -209,11 +209,7 @@ def true_range(bars):
 def atr(bars, window=14, exp=False):
     tr = true_range(bars)
 
-    if exp:
-        res = rolling_weighted_mean(tr, window)
-    else:
-        res = rolling_mean(tr, window)
-
+    res = rolling_weighted_mean(tr, window) if exp else rolling_mean(tr, window)
     return pd.Series(res)
 
 

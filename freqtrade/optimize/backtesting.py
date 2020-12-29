@@ -130,7 +130,10 @@ class Backtesting:
             self.protections = ProtectionManager(self.config)
 
         # Get maximum required startup period
-        self.required_startup = max([strat.startup_candle_count for strat in self.strategylist])
+        self.required_startup = max(
+            strat.startup_candle_count for strat in self.strategylist
+        )
+
         # Load one (first) strategy
         self._set_strategy(self.strategylist[0])
 
@@ -291,9 +294,9 @@ class Backtesting:
         Handling of left open trades at the end of backtesting
         """
         trades = []
-        for pair in open_trades.keys():
+        for pair, value in open_trades.items():
             if len(open_trades[pair]) > 0:
-                for trade in open_trades[pair]:
+                for trade in value:
                     sell_row = data[pair][-1]
 
                     trade_entry = BacktestResult(pair=trade.pair,

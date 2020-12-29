@@ -42,10 +42,10 @@ ORDER_TYPES = [
 
 
 def trim_dictlist(dict_list, num):
-    new = {}
-    for pair, pair_data in dict_list.items():
-        new[pair] = pair_data[num:].reset_index()
-    return new
+    return {
+        pair: pair_data[num:].reset_index()
+        for pair, pair_data in dict_list.items()
+    }
 
 
 def load_data_test(what, testdatadir):
@@ -88,7 +88,8 @@ def simple_backtest(config, contour, mocker, testdatadir) -> None:
     processed = backtesting.strategy.ohlcvdata_to_dataframe(data)
     min_date, max_date = get_timerange(processed)
     assert isinstance(processed, dict)
-    results = backtesting.backtest(
+    # results :: <class 'pandas.core.frame.DataFrame'>
+    return backtesting.backtest(
         processed=processed,
         stake_amount=config['stake_amount'],
         start_date=min_date,
@@ -97,8 +98,6 @@ def simple_backtest(config, contour, mocker, testdatadir) -> None:
         position_stacking=False,
         enable_protections=config.get('enable_protections', False),
     )
-    # results :: <class 'pandas.core.frame.DataFrame'>
-    return results
 
 
 # FIX: fixturize this?
@@ -123,7 +122,7 @@ def _trend(signals, buy_value, sell_value):
     n = len(signals['low'])
     buy = np.zeros(n)
     sell = np.zeros(n)
-    for i in range(0, len(signals['buy'])):
+    for i in range(len(signals['buy'])):
         if random.random() > 0.5:  # Both buy and sell signals at same timeframe
             buy[i] = buy_value
             sell[i] = sell_value
@@ -138,7 +137,7 @@ def _trend_alternate(dataframe=None, metadata=None):
     n = len(low)
     buy = np.zeros(n)
     sell = np.zeros(n)
-    for i in range(0, len(buy)):
+    for i in range(len(buy)):
         if i % 2 == 0:
             buy[i] = 1
         else:
@@ -238,13 +237,13 @@ def test_setup_optimize_configuration_unlimited_stake_amount(mocker, default_con
 
     patched_configuration_load_config_file(mocker, default_conf)
 
-    args = [
-        'backtesting',
-        '--config', 'config.json',
-        '--strategy', 'DefaultStrategy',
-    ]
-
     with pytest.raises(DependencyException, match=r'.`stake_amount`.*'):
+        args = [
+            'backtesting',
+            '--config', 'config.json',
+            '--strategy', 'DefaultStrategy',
+        ]
+
         setup_optimize_configuration(get_args(args), RunMode.BACKTEST)
 
 
@@ -640,10 +639,7 @@ def test_backtest_multi_pair(default_conf, fee, mocker, tres, pair, testdatadir)
         """
         Buy every xth candle - sell every other xth -2 (hold on to pairs a bit)
         """
-        if metadata['pair'] in ('ETH/BTC', 'LTC/BTC'):
-            multi = 20
-        else:
-            multi = 18
+        multi = 20 if metadata['pair'] in ('ETH/BTC', 'LTC/BTC') else 18
         dataframe['buy'] = np.where(dataframe.index % multi == 0, 1, 0)
         dataframe['sell'] = np.where((dataframe.index + multi - 2) % multi == 0, 1, 0)
         return dataframe

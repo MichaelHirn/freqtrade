@@ -22,8 +22,10 @@ def setup_optimize_configuration(args: Dict[str, Any], method: RunMode) -> Dict[
         RunMode.BACKTEST: 'backtesting',
         RunMode.HYPEROPT: 'hyperoptimization',
     }
-    if (method in no_unlimited_runmodes.keys() and
-            config['stake_amount'] == constants.UNLIMITED_STAKE_AMOUNT):
+    if (
+        method in no_unlimited_runmodes
+        and config['stake_amount'] == constants.UNLIMITED_STAKE_AMOUNT
+    ):
         raise DependencyException(
             f'The value of `stake_amount` cannot be set as "{constants.UNLIMITED_STAKE_AMOUNT}" '
             f'for {no_unlimited_runmodes[method]}')

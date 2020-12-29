@@ -351,7 +351,7 @@ class Trade(_DECL_BASE):
         :param initial: Called to initiate stop_loss.
             Skips everything if self.stop_loss is already set.
         """
-        if initial and not (self.stop_loss is None or self.stop_loss == 0):
+        if initial and self.stop_loss is not None and self.stop_loss != 0:
             # Don't modify if called with initial and nothing to do
             return
 
@@ -553,7 +553,7 @@ class Trade(_DECL_BASE):
         orders = [o for o in self.orders if o.side == order_side]
         if is_open is not None:
             orders = [o for o in orders if o.ft_is_open == is_open]
-        if len(orders) > 0:
+        if orders:
             return orders[-1]
         else:
             return None
@@ -568,12 +568,12 @@ class Trade(_DECL_BASE):
                              e.g. `(trade_filter=Trade.id == trade_id)`
         :return: unsorted query object
         """
-        if trade_filter is not None:
-            if not isinstance(trade_filter, list):
-                trade_filter = [trade_filter]
-            return Trade.query.filter(*trade_filter)
-        else:
+        if trade_filter is None:
             return Trade.query
+
+        if not isinstance(trade_filter, list):
+            trade_filter = [trade_filter]
+        return Trade.query.filter(*trade_filter)
 
     @staticmethod
     def get_trades_proxy(*, pair: str = None, is_open: bool = None,
@@ -685,12 +685,11 @@ class Trade(_DECL_BASE):
         Get best pair with closed trade.
         :returns: Tuple containing (pair, profit_sum)
         """
-        best_pair = Trade.session.query(
+        return Trade.session.query(
             Trade.pair, func.sum(Trade.close_profit).label('profit_sum')
         ).filter(Trade.is_open.is_(False)) \
             .group_by(Trade.pair) \
             .order_by(desc('profit_sum')).first()
-        return best_pair
 
     @staticmethod
     def stoploss_reinitialization(desired_stoploss):

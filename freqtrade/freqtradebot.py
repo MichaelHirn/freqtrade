@@ -573,28 +573,27 @@ class FreqtradeBot(LoggingMixin):
         # running get_signal on historical data fetched
         (buy, sell) = self.strategy.get_signal(pair, self.strategy.timeframe, analyzed_df)
 
-        if buy and not sell:
-            stake_amount = self.get_trade_stake_amount(pair)
-            if not stake_amount:
-                logger.debug(f"Stake amount is 0, ignoring possible trade for {pair}.")
+        if not buy or sell:
+            return False
+
+        stake_amount = self.get_trade_stake_amount(pair)
+        if not stake_amount:
+            logger.debug(f"Stake amount is 0, ignoring possible trade for {pair}.")
+            return False
+
+        logger.info(f"Buy signal found: about create a new trade with stake_amount: "
+                    f"{stake_amount} ...")
+
+        bid_check_dom = self.config.get('bid_strategy', {}).get('check_depth_of_market', {})
+        if ((bid_check_dom.get('enabled', False)) and
+                    (bid_check_dom.get('bids_to_ask_delta', 0) > 0)):
+            if not self._check_depth_of_market_buy(pair, bid_check_dom):
                 return False
 
-            logger.info(f"Buy signal found: about create a new trade with stake_amount: "
-                        f"{stake_amount} ...")
-
-            bid_check_dom = self.config.get('bid_strategy', {}).get('check_depth_of_market', {})
-            if ((bid_check_dom.get('enabled', False)) and
-                    (bid_check_dom.get('bids_to_ask_delta', 0) > 0)):
-                if self._check_depth_of_market_buy(pair, bid_check_dom):
-                    logger.info(f'Executing Buy for {pair}.')
-                    return self.execute_buy(pair, stake_amount)
-                else:
-                    return False
-
-            logger.info(f'Executing Buy for {pair}')
+            logger.info(f'Executing Buy for {pair}.')
             return self.execute_buy(pair, stake_amount)
-        else:
-            return False
+        logger.info(f'Executing Buy for {pair}')
+        return self.execute_buy(pair, stake_amount)
 
     def _check_depth_of_market_buy(self, pair: str, conf: Dict) -> bool:
         """
@@ -984,9 +983,8 @@ class FreqtradeBot(LoggingMixin):
         if stoploss_order and stoploss_order['status'] in ('canceled', 'cancelled'):
             if self.create_stoploss_order(trade=trade, stop_price=trade.stop_loss):
                 return False
-            else:
-                trade.stoploss_order_id = None
-                logger.warning('Stoploss order was cancelled, but unable to recreate one.')
+            trade.stoploss_order_id = None
+            logger.warning('Stoploss order was cancelled, but unable to recreate one.')
 
         # Finally we check if stoploss on exchange should be moved up because of trailing.
         if stoploss_order and self.config.get('trailing_stop', False):
@@ -1173,11 +1171,9 @@ class FreqtradeBot(LoggingMixin):
                 except InvalidOrderException:
                     logger.exception(f"Could not cancel sell order {trade.open_order_id}")
                     return 'error cancelling order'
-                logger.info('Sell order %s for %s.', reason, trade)
             else:
                 reason = constants.CANCEL_REASON['CANCELLED_ON_EXCHANGE']
-                logger.info('Sell order %s for %s.', reason, trade)
-
+            logger.info('Sell order %s for %s.', reason, trade)
             trade.close_rate = None
             trade.close_rate_requested = None
             trade.close_profit = None
@@ -1298,7 +1294,7 @@ class FreqtradeBot(LoggingMixin):
         """
         Sends rpc notification when a sell occured.
         """
-        profit_rate = trade.close_rate if trade.close_rate else trade.close_rate_requested
+        profit_rate = trade.close_rate or trade.close_rate_requested
         profit_trade = trade.calc_profit(rate=profit_rate)
         # Use cached rates here - it was updated seconds ago.
         current_rate = self.get_sell_rate(trade.pair, False)
@@ -1342,7 +1338,7 @@ class FreqtradeBot(LoggingMixin):
         else:
             trade.sell_order_status = reason
 
-        profit_rate = trade.close_rate if trade.close_rate else trade.close_rate_requested
+        profit_rate = trade.close_rate or trade.close_rate_requested
         profit_trade = trade.calc_profit(rate=profit_rate)
         current_rate = self.get_sell_rate(trade.pair, False)
         profit_ratio = trade.calc_profit_ratio(profit_rate)
@@ -1438,15 +1434,16 @@ class FreqtradeBot(LoggingMixin):
         Can eat into dust if more than the required asset is available.
         """
         self.wallets.update()
-        if fee_abs != 0 and self.wallets.get_free(trade_base_currency) >= amount:
-            # Eat into dust if we own more than base currency
-            logger.info(f"Fee amount for {trade} was in base currency - "
-                        f"Eating Fee {fee_abs} into dust.")
-        elif fee_abs != 0:
-            real_amount = self.exchange.amount_to_precision(trade.pair, amount - fee_abs)
-            logger.info(f"Applying fee on amount for {trade} "
-                        f"(from {amount} to {real_amount}).")
-            return real_amount
+        if fee_abs != 0:
+            if self.wallets.get_free(trade_base_currency) >= amount:
+                # Eat into dust if we own more than base currency
+                logger.info(f"Fee amount for {trade} was in base currency - "
+                            f"Eating Fee {fee_abs} into dust.")
+            else:
+                real_amount = self.exchange.amount_to_precision(trade.pair, amount - fee_abs)
+                logger.info(f"Applying fee on amount for {trade} "
+                            f"(from {amount} to {real_amount}).")
+                return real_amount
         return amount
 
     def get_real_amount(self, trade: Trade, order: Dict) -> float:

@@ -72,12 +72,12 @@ def test_start_new_config(mocker, caplog, exchange):
 def test_start_new_config_exists(mocker, caplog):
     mocker.patch.object(Path, "exists", MagicMock(return_value=True))
     mocker.patch('freqtrade.commands.build_config_commands.ask_user_overwrite', return_value=False)
-    args = [
-        "new-config",
-        "--config",
-        "coolconfig.json"
-    ]
     with pytest.raises(OperationalException, match=r"Configuration .* already exists\."):
+        args = [
+            "new-config",
+            "--config",
+            "coolconfig.json"
+        ]
         start_new_config(get_args(args))
 
 

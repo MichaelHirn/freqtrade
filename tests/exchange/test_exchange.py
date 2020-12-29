@@ -1850,10 +1850,10 @@ def test_get_historic_trades_notsupported(default_conf, mocker, caplog, exchange
     mocker.patch('freqtrade.exchange.Exchange.exchange_has', return_value=False)
     exchange = get_patched_exchange(mocker, default_conf, id=exchange_name)
 
-    pair = 'ETH/BTC'
-
     with pytest.raises(OperationalException,
-                       match="This exchange does not suport downloading Trades."):
+                           match="This exchange does not suport downloading Trades."):
+        pair = 'ETH/BTC'
+
         exchange.get_historic_trades(pair, since=trades_history[0][0],
                                      until=trades_history[-1][0])
 

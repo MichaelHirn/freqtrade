@@ -313,9 +313,8 @@ class IStrategy(ABC):
         if not candle_date:
             # Simple call ...
             return PairLocks.is_pair_locked(pair)
-        else:
-            lock_time = timeframe_to_next_date(self.timeframe, candle_date)
-            return PairLocks.is_pair_locked(pair, lock_time)
+        lock_time = timeframe_to_next_date(self.timeframe, candle_date)
+        return PairLocks.is_pair_locked(pair, lock_time)
 
     def analyze_ticker(self, dataframe: DataFrame, metadata: dict) -> DataFrame:
         """
@@ -526,7 +525,7 @@ class IStrategy(ABC):
         decides to sell or not
         :param current_profit: current profit as ratio
         """
-        stop_loss_value = force_stoploss if force_stoploss else self.stoploss
+        stop_loss_value = force_stoploss or self.stoploss
 
         # Initiate stoploss with open_rate. Does nothing if stoploss is already set.
         trade.adjust_stop_loss(trade.open_rate, stop_loss_value, initial=True)
@@ -620,12 +619,12 @@ class IStrategy(ABC):
         :return: a Dataframe with all mandatory indicators for the strategies
         """
         logger.debug(f"Populating indicators for pair {metadata.get('pair')}.")
-        if self._populate_fun_len == 2:
-            warnings.warn("deprecated - check out the Sample strategy to see "
-                          "the current function headers!", DeprecationWarning)
-            return self.populate_indicators(dataframe)  # type: ignore
-        else:
+        if self._populate_fun_len != 2:
             return self.populate_indicators(dataframe, metadata)
+
+        warnings.warn("deprecated - check out the Sample strategy to see "
+                      "the current function headers!", DeprecationWarning)
+        return self.populate_indicators(dataframe)  # type: ignore
 
     def advise_buy(self, dataframe: DataFrame, metadata: dict) -> DataFrame:
         """
@@ -636,12 +635,12 @@ class IStrategy(ABC):
         :return: DataFrame with buy column
         """
         logger.debug(f"Populating buy signals for pair {metadata.get('pair')}.")
-        if self._buy_fun_len == 2:
-            warnings.warn("deprecated - check out the Sample strategy to see "
-                          "the current function headers!", DeprecationWarning)
-            return self.populate_buy_trend(dataframe)  # type: ignore
-        else:
+        if self._buy_fun_len != 2:
             return self.populate_buy_trend(dataframe, metadata)
+
+        warnings.warn("deprecated - check out the Sample strategy to see "
+                      "the current function headers!", DeprecationWarning)
+        return self.populate_buy_trend(dataframe)  # type: ignore
 
     def advise_sell(self, dataframe: DataFrame, metadata: dict) -> DataFrame:
         """
@@ -652,9 +651,9 @@ class IStrategy(ABC):
         :return: DataFrame with sell column
         """
         logger.debug(f"Populating sell signals for pair {metadata.get('pair')}.")
-        if self._sell_fun_len == 2:
-            warnings.warn("deprecated - check out the Sample strategy to see "
-                          "the current function headers!", DeprecationWarning)
-            return self.populate_sell_trend(dataframe)  # type: ignore
-        else:
+        if self._sell_fun_len != 2:
             return self.populate_sell_trend(dataframe, metadata)
+
+        warnings.warn("deprecated - check out the Sample strategy to see "
+                      "the current function headers!", DeprecationWarning)
+        return self.populate_sell_trend(dataframe)  # type: ignore

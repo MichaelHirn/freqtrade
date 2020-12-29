@@ -267,10 +267,13 @@ class FtRestClient():
         :param stake_currency: Only pairs that include this timeframe
         :return: json object
         """
-        return self._get("available_pairs", params={
-            "stake_currency": stake_currency if timeframe else '',
-            "timeframe": timeframe if timeframe else '',
-        })
+        return self._get(
+            "available_pairs",
+            params={
+                "stake_currency": stake_currency if timeframe else '',
+                "timeframe": timeframe or '',
+            },
+        )
 
     def pair_candles(self, pair, timeframe, limit=None):
         """Return live dataframe for <pair><timeframe>.
@@ -295,12 +298,15 @@ class FtRestClient():
         :param timerange: Timerange to get data for (same format than --timerange endpoints)
         :return: json object
         """
-        return self._get("pair_history", params={
-            "pair": pair,
-            "timeframe": timeframe,
-            "strategy": strategy,
-            "timerange": timerange if timerange else '',
-        })
+        return self._get(
+            "pair_history",
+            params={
+                "pair": pair,
+                "timeframe": timeframe,
+                "strategy": strategy,
+                "timerange": timerange or '',
+            },
+        )
 
 
 def add_arguments():

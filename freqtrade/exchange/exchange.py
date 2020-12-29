@@ -234,7 +234,7 @@ class Exchange:
         Return a list of supported quote currencies
         """
         markets = self.markets
-        return sorted(set([x['quote'] for _, x in markets.items()]))
+        return sorted({x['quote'] for _, x in markets.items()})
 
     def get_pair_quote_currency(self, pair: str) -> str:
         """
@@ -398,10 +398,11 @@ class Exchange:
         """
         Checks if order-types configured in strategy/config are supported
         """
-        if any(v == 'market' for k, v in order_types.items()):
-            if not self.exchange_has('createMarketOrder'):
-                raise OperationalException(
-                    f'Exchange {self.name} does not support market orders.')
+        if any(
+            v == 'market' for k, v in order_types.items()
+        ) and not self.exchange_has('createMarketOrder'):
+            raise OperationalException(
+                f'Exchange {self.name} does not support market orders.')
 
         if (order_types.get("stoploss_on_exchange")
                 and not self._ft_has.get("stoploss_on_exchange", False)):
@@ -562,8 +563,7 @@ class Exchange:
             rate: float, time_in_force: str) -> Dict:
 
         if self._config['dry_run']:
-            dry_order = self.dry_run_order(pair, ordertype, "buy", amount, rate)
-            return dry_order
+            return self.dry_run_order(pair, ordertype, "buy", amount, rate)
 
         params = self._params.copy()
         if time_in_force != 'gtc' and ordertype != 'market':
@@ -575,8 +575,7 @@ class Exchange:
              rate: float, time_in_force: str = 'gtc') -> Dict:
 
         if self._config['dry_run']:
-            dry_order = self.dry_run_order(pair, ordertype, "sell", amount, rate)
-            return dry_order
+            return self.dry_run_order(pair, ordertype, "sell", amount, rate)
 
         params = self._params.copy()
         if time_in_force != 'gtc' and ordertype != 'market':
@@ -661,8 +660,7 @@ class Exchange:
             if (pair not in self._api.markets or
                     self._api.markets[pair].get('active', False) is False):
                 raise ExchangeError(f"Pair {pair} not available")
-            data = self._api.fetch_ticker(pair)
-            return data
+            return self._api.fetch_ticker(pair)
         except ccxt.DDoSProtection as e:
             raise DDosProtection(e) from e
         except (ccxt.NetworkError, ccxt.ExchangeError) as e:
@@ -751,8 +749,10 @@ class Exchange:
 
         # Gather coroutines to run
         for pair, timeframe in set(pair_list):
-            if (not ((pair, timeframe) in self._klines)
-                    or self._now_is_time_to_refresh(pair, timeframe)):
+            if (
+                pair,
+                timeframe,
+            ) not in self._klines or self._now_is_time_to_refresh(pair, timeframe):
                 input_coroutines.append(self._async_get_candle_history(pair, timeframe,
                                                                        since_ms=since_ms))
             else:
@@ -1064,8 +1064,7 @@ class Exchange:
     def fetch_order(self, order_id: str, pair: str) -> Dict:
         if self._config['dry_run']:
             try:
-                order = self._dry_run_open_orders[order_id]
-                return order
+                return self._dry_run_open_orders[order_id]
             except KeyError as e:
                 # Gracefully handle errors with dry-run orders.
                 raise InvalidOrderException(
@@ -1161,9 +1160,7 @@ class Exchange:
             # since needs to be int in milliseconds
             my_trades = self._api.fetch_my_trades(
                 pair, int((since.replace(tzinfo=timezone.utc).timestamp() - 5) * 1000))
-            matched_trades = [trade for trade in my_trades if trade['order'] == order_id]
-
-            return matched_trades
+            return [trade for trade in my_trades if trade['order'] == order_id]
         except ccxt.DDoSProtection as e:
             raise DDosProtection(e) from e
         except (ccxt.NetworkError, ccxt.ExchangeError) as e:

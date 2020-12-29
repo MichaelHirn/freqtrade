@@ -25,10 +25,9 @@ def _extend_validator(validator_class):
             if 'default' in subschema:
                 instance.setdefault(prop, subschema['default'])
 
-        for error in validate_properties(
+        yield from validate_properties(
             validator, properties, instance, schema,
-        ):
-            yield error
+        )
 
     return validators.extend(
         validator_class, {'properties': set_defaults}
@@ -107,11 +106,10 @@ def _validate_trailing_stoploss(conf: Dict[str, Any]) -> None:
     tsl_offset = float(conf.get('trailing_stop_positive_offset', 0))
     tsl_only_offset = conf.get('trailing_only_offset_is_reached', False)
 
-    if tsl_only_offset:
-        if tsl_positive == 0.0:
-            raise OperationalException(
-                'The config trailing_only_offset_is_reached needs '
-                'trailing_stop_positive_offset to be more than 0 in your config.')
+    if tsl_only_offset and tsl_positive == 0.0:
+        raise OperationalException(
+            'The config trailing_only_offset_is_reached needs '
+            'trailing_stop_positive_offset to be more than 0 in your config.')
     if tsl_positive > 0 and 0 < tsl_offset <= tsl_positive:
         raise OperationalException(
             'The config trailing_stop_positive_offset needs '

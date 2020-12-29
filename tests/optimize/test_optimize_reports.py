@@ -288,8 +288,7 @@ def test_generate_sell_reason_stats():
 
 def test_text_table_strategy(default_conf):
     default_conf['max_open_trades'] = 2
-    results = {}
-    results['TestStrategy1'] = {'results': pd.DataFrame(
+    results = {'TestStrategy1': {'results': pd.DataFrame(
         {
             'pair': ['ETH/BTC', 'ETH/BTC', 'ETH/BTC'],
             'profit_percent': [0.1, 0.2, 0.3],
@@ -300,7 +299,7 @@ def test_text_table_strategy(default_conf):
             'losses': [0, 0, 1],
             'sell_reason': [SellType.ROI, SellType.ROI, SellType.STOP_LOSS]
         }
-    ), 'config': default_conf}
+    ), 'config': default_conf}}
     results['TestStrategy2'] = {'results': pd.DataFrame(
         {
             'pair': ['LTC/BTC', 'LTC/BTC', 'LTC/BTC'],
@@ -332,8 +331,7 @@ def test_text_table_strategy(default_conf):
 
 def test_generate_edge_table():
 
-    results = {}
-    results['ETH/BTC'] = PairInfo(-0.01, 0.60, 2, 1, 3, 10, 60)
+    results = {'ETH/BTC': PairInfo(-0.01, 0.60, 2, 1, 3, 10, 60)}
     assert generate_edge_table(results).count('+') == 7
     assert generate_edge_table(results).count('| ETH/BTC |') == 1
     assert generate_edge_table(results).count(

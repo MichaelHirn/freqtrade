@@ -144,7 +144,5 @@ def check_migrate(engine, decl_base, previous_tables) -> None:
     if 'orders' not in previous_tables:
         logger.info('Moving open orders to Orders table.')
         migrate_open_orders_to_trades(engine)
-    else:
-        pass
         # Empty for now - as there is only one iteration of the orders table so far.
         # table_back_name = get_backup_name(tabs, 'orders_bak')

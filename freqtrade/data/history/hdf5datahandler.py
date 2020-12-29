@@ -203,11 +203,9 @@ class HDF5DataHandler(IDataHandler):
     @classmethod
     def _pair_data_filename(cls, datadir: Path, pair: str, timeframe: str) -> Path:
         pair_s = misc.pair_to_filename(pair)
-        filename = datadir.joinpath(f'{pair_s}-{timeframe}.h5')
-        return filename
+        return datadir.joinpath(f'{pair_s}-{timeframe}.h5')
 
     @classmethod
     def _pair_trades_filename(cls, datadir: Path, pair: str) -> Path:
         pair_s = misc.pair_to_filename(pair)
-        filename = datadir.joinpath(f'{pair_s}-trades.h5')
-        return filename
+        return datadir.joinpath(f'{pair_s}-trades.h5')

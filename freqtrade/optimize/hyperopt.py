@@ -172,8 +172,7 @@ class Hyperopt:
         Read hyperopt results from file
         """
         logger.info("Reading epochs from '%s'", results_file)
-        data = load(results_file)
-        return data
+        return load(results_file)
 
     def _get_params_details(self, params: Dict) -> Dict:
         """
