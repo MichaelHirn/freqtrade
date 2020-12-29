@@ -135,13 +135,13 @@ def test_setup_hyperopt_configuration_unlimited_stake_amount(mocker, default_con
 
     patched_configuration_load_config_file(mocker, default_conf)
 
-    args = [
-        'hyperopt',
-        '--config', 'config.json',
-        '--hyperopt', 'DefaultHyperOpt',
-    ]
-
     with pytest.raises(DependencyException, match=r'.`stake_amount`.*'):
+        args = [
+            'hyperopt',
+            '--config', 'config.json',
+            '--hyperopt', 'DefaultHyperOpt',
+        ]
+
         setup_optimize_configuration(get_args(args), RunMode.HYPEROPT)
 
 

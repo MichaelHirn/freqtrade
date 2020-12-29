@@ -148,7 +148,7 @@ class StrategyResolver(IResolver):
             raise ImportError(f"Impossible to load Strategy '{strategy.__class__.__name__}'. "
                               f"Order-types mapping is incomplete.")
 
-        if not all(k in strategy.order_time_in_force for k in REQUIRED_ORDERTIF):
+        if any(k not in strategy.order_time_in_force for k in REQUIRED_ORDERTIF):
             raise ImportError(f"Impossible to load Strategy '{strategy.__class__.__name__}'. "
                               f"Order-time-in-force mapping is incomplete.")
 
@@ -192,9 +192,11 @@ class StrategyResolver(IResolver):
             strategy._populate_fun_len = len(getfullargspec(strategy.populate_indicators).args)
             strategy._buy_fun_len = len(getfullargspec(strategy.populate_buy_trend).args)
             strategy._sell_fun_len = len(getfullargspec(strategy.populate_sell_trend).args)
-            if any([x == 2 for x in [strategy._populate_fun_len,
-                                     strategy._buy_fun_len,
-                                     strategy._sell_fun_len]]):
+            if 2 in [
+                strategy._populate_fun_len,
+                strategy._buy_fun_len,
+                strategy._sell_fun_len,
+            ]:
                 strategy.INTERFACE_VERSION = 1
 
             return strategy

@@ -25,8 +25,6 @@ def start_hyperopt_list(args: Dict[str, Any]) -> None:
     print_json = config.get('print_json', False)
     export_csv = config.get('export_csv', None)
     no_details = config.get('hyperopt_list_no_details', False)
-    no_header = False
-
     filteroptions = {
         'only_best': config.get('hyperopt_list_best', False),
         'only_profitable': config.get('hyperopt_list_profitable', False),
@@ -65,6 +63,8 @@ def start_hyperopt_list(args: Dict[str, Any]) -> None:
     if epochs and not no_details:
         sorted_epochs = sorted(epochs, key=itemgetter('loss'))
         results = sorted_epochs[0]
+        no_header = False
+
         Hyperopt.print_epoch_details(results, total_epochs, print_json, no_header)
 
     if epochs and export_csv:

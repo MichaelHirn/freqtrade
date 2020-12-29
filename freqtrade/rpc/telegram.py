@@ -309,7 +309,7 @@ class Telegram(RPCHandler):
                         lines.append("*Open Order:* `{open_order}`")
 
                 # Filter empty lines using list-comprehension
-                messages.append("\n".join([line for line in lines if line]).format(**r))
+                messages.append("\n".join(line for line in lines if line).format(**r))
 
             for msg in messages:
                 self._send_msg(msg)
@@ -402,7 +402,7 @@ class Telegram(RPCHandler):
         avg_duration = stats['avg_duration']
         best_pair = stats['best_pair']
         best_rate = stats['best_rate']
-        if stats['trade_count'] == 0:
+        if trade_count == 0:
             markdown_msg = 'No trades yet.'
         else:
             # Message to display
@@ -742,9 +742,11 @@ class Telegram(RPCHandler):
         try:
 
             blacklist = self._rpc._rpc_blacklist(context.args)
-            errmsgs = []
-            for pair, error in blacklist['errors'].items():
-                errmsgs.append(f"Error adding `{pair}` to blacklist: `{error['error_msg']}`")
+            errmsgs = [
+                f"Error adding `{pair}` to blacklist: `{error['error_msg']}`"
+                for pair, error in blacklist['errors'].items()
+            ]
+
             if errmsgs:
                 self._send_msg('\n'.join(errmsgs))
 

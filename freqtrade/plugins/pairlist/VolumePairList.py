@@ -72,21 +72,19 @@ class VolumePairList(IPairList):
         """
         # Generate dynamic whitelist
         # Must always run if this pairlist is not the first in the list.
-        if self._last_refresh + self.refresh_period < datetime.now().timestamp():
-            self._last_refresh = int(datetime.now().timestamp())
-
-            # Use fresh pairlist
-            # Check if pair quote currency equals to the stake currency.
-            filtered_tickers = [
-                    v for k, v in tickers.items()
-                    if (self._exchange.get_pair_quote_currency(k) == self._stake_currency
-                        and v[self._sort_key] is not None)]
-            pairlist = [s['symbol'] for s in filtered_tickers]
-        else:
+        if self._last_refresh + self.refresh_period >= datetime.now().timestamp():
             # Use the cached pairlist if it's not time yet to refresh
-            pairlist = cached_pairlist
+            return cached_pairlist
 
-        return pairlist
+        self._last_refresh = int(datetime.now().timestamp())
+
+        # Use fresh pairlist
+        # Check if pair quote currency equals to the stake currency.
+        filtered_tickers = [
+                v for k, v in tickers.items()
+                if (self._exchange.get_pair_quote_currency(k) == self._stake_currency
+                    and v[self._sort_key] is not None)]
+        return [s['symbol'] for s in filtered_tickers]
 
     def filter_pairlist(self, pairlist: List[str], tickers: Dict) -> List[str]:
         """

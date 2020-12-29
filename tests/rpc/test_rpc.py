@@ -256,11 +256,9 @@ def test_rpc_daily_profit(default_conf, update, ticker, fee,
     assert days['fiat_display_currency'] == default_conf['fiat_display_currency']
     for day in days['data']:
         # [datetime.date(2018, 1, 11), '0.00000000 BTC', '0.000 USD']
-        assert (day['abs_profit'] == 0.0 or
-                day['abs_profit'] == 0.00006217)
+        assert day['abs_profit'] in [0.0, 0.00006217]
 
-        assert (day['fiat_value'] == 0.0 or
-                day['fiat_value'] == 0.76748865)
+        assert day['fiat_value'] in [0.0, 0.76748865]
     # ensure first day is current date
     assert str(days['data'][0]['date']) == str(datetime.utcnow().date())
 
@@ -891,8 +889,8 @@ def test_rpcforcebuy_stopped(mocker, default_conf) -> None:
     freqtradebot = get_patched_freqtradebot(mocker, default_conf)
     patch_get_signal(freqtradebot, (True, False))
     rpc = RPC(freqtradebot)
-    pair = 'ETH/BTC'
     with pytest.raises(RPCException, match=r'trader is not running'):
+        pair = 'ETH/BTC'
         rpc._rpc_forcebuy(pair, None)
 
 
@@ -902,8 +900,8 @@ def test_rpcforcebuy_disabled(mocker, default_conf) -> None:
     freqtradebot = get_patched_freqtradebot(mocker, default_conf)
     patch_get_signal(freqtradebot, (True, False))
     rpc = RPC(freqtradebot)
-    pair = 'ETH/BTC'
     with pytest.raises(RPCException, match=r'Forcebuy not enabled.'):
+        pair = 'ETH/BTC'
         rpc._rpc_forcebuy(pair, None)
 
 

@@ -167,7 +167,7 @@ def safe_value_fallback2(dict1: dict, dict2: dict, key1: str, key2: str, default
 
 
 def plural(num: float, singular: str, plural: str = None) -> str:
-    return singular if (num == 1 or num == -1) else plural or singular + 's'
+    return singular if num in [1, -1] else plural or singular + 's'
 
 
 def render_template(templatefile: str, arguments: dict = {}) -> str:

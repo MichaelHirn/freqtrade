@@ -167,7 +167,6 @@ class JsonDataHandler(IDataHandler):
             # Convert trades dict to list
             logger.info("Old trades format detected - converting")
             tradesdata = trades_dict_to_list(tradesdata)
-            pass
         return tradesdata
 
     def trades_purge(self, pair: str) -> bool:
@@ -185,8 +184,7 @@ class JsonDataHandler(IDataHandler):
     @classmethod
     def _pair_data_filename(cls, datadir: Path, pair: str, timeframe: str) -> Path:
         pair_s = misc.pair_to_filename(pair)
-        filename = datadir.joinpath(f'{pair_s}-{timeframe}.{cls._get_file_extension()}')
-        return filename
+        return datadir.joinpath(f'{pair_s}-{timeframe}.{cls._get_file_extension()}')
 
     @classmethod
     def _get_file_extension(cls):
@@ -195,8 +193,7 @@ class JsonDataHandler(IDataHandler):
     @classmethod
     def _pair_trades_filename(cls, datadir: Path, pair: str) -> Path:
         pair_s = misc.pair_to_filename(pair)
-        filename = datadir.joinpath(f'{pair_s}-trades.{cls._get_file_extension()}')
-        return filename
+        return datadir.joinpath(f'{pair_s}-trades.{cls._get_file_extension()}')
 
 
 class JsonGzDataHandler(JsonDataHandler):

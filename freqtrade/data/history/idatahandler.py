@@ -167,9 +167,7 @@ class IDataHandler(ABC):
 
         pairdf = self._ohlcv_load(pair, timeframe,
                                   timerange=timerange_startup)
-        if self._check_empty_df(pairdf, pair, timeframe, warn_no_data):
-            return pairdf
-        else:
+        if not self._check_empty_df(pairdf, pair, timeframe, warn_no_data):
             enddate = pairdf.iloc[-1]['date']
 
             if timerange_startup:
@@ -185,7 +183,7 @@ class IDataHandler(ABC):
                                            drop_incomplete=(drop_incomplete and
                                                             enddate == pairdf.iloc[-1]['date']))
             self._check_empty_df(pairdf, pair, timeframe, warn_no_data)
-            return pairdf
+        return pairdf
 
     def _check_empty_df(self, pairdf: DataFrame, pair: str, timeframe: str, warn_no_data: bool):
         """

@@ -67,14 +67,15 @@ class IResolver:
             if enum_failed:
                 return iter([None])
 
-        valid_objects_gen = (
-            (obj, inspect.getsource(module)) for
-            name, obj in inspect.getmembers(
-                module, inspect.isclass) if ((object_name is None or object_name == name)
-                                             and issubclass(obj, cls.object_type)
-                                             and obj is not cls.object_type)
+        return (
+            (obj, inspect.getsource(module))
+            for name, obj in inspect.getmembers(module, inspect.isclass)
+            if (
+                (object_name is None or object_name == name)
+                and issubclass(obj, cls.object_type)
+                and obj is not cls.object_type
+            )
         )
-        return valid_objects_gen
 
     @classmethod
     def _search_object(cls, directory: Path, *, object_name: str, add_source: bool = False

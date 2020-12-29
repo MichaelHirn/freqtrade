@@ -50,13 +50,19 @@ def _print_objs_tabular(objs: List, print_colorized: bool) -> None:
         reset = ''
 
     names = [s['name'] for s in objs]
-    objss_to_print = [{
-        'name': s['name'] if s['name'] else "--",
-        'location': s['location'].name,
-        'status': (red + "LOAD FAILED" + reset if s['class'] is None
-                   else "OK" if names.count(s['name']) == 1
-                   else yellow + "DUPLICATE NAME" + reset)
-    } for s in objs]
+    objss_to_print = [
+        {
+            'name': s['name'] or "--",
+            'location': s['location'].name,
+            'status': red + "LOAD FAILED" + reset
+            if s['class'] is None
+            else "OK"
+            if names.count(s['name']) == 1
+            else yellow + "DUPLICATE NAME" + reset,
+        }
+        for s in objs
+    ]
+
 
     print(tabulate(objss_to_print, headers='keys', tablefmt='psql', stralign='right'))
 
@@ -73,7 +79,7 @@ def start_list_strategies(args: Dict[str, Any]) -> None:
     strategy_objs = sorted(strategy_objs, key=lambda x: x['name'])
 
     if args['print_one_column']:
-        print('\n'.join([s['name'] for s in strategy_objs]))
+        print('\n'.join(s['name'] for s in strategy_objs))
     else:
         _print_objs_tabular(strategy_objs, config.get('print_colorized', False))
 
@@ -92,7 +98,7 @@ def start_list_hyperopts(args: Dict[str, Any]) -> None:
     hyperopt_objs = sorted(hyperopt_objs, key=lambda x: x['name'])
 
     if args['print_one_column']:
-        print('\n'.join([s['name'] for s in hyperopt_objs]))
+        print('\n'.join(s['name'] for s in hyperopt_objs))
     else:
         _print_objs_tabular(hyperopt_objs, config.get('print_colorized', False))
 
@@ -158,13 +164,21 @@ def start_list_markets(args: Dict[str, Any], pairs_only: bool = False) -> None:
         headers = ["Id", "Symbol", "Base", "Quote", "Active",
                    *(['Is pair'] if not pairs_only else [])]
 
-        tabular_data = []
-        for _, v in pairs.items():
-            tabular_data.append({'Id': v['id'], 'Symbol': v['symbol'],
-                                 'Base': v['base'], 'Quote': v['quote'],
-                                 'Active': market_is_active(v),
-                                 **({'Is pair': exchange.market_is_tradable(v)}
-                                    if not pairs_only else {})})
+        tabular_data = [
+            {
+                'Id': v['id'],
+                'Symbol': v['symbol'],
+                'Base': v['base'],
+                'Quote': v['quote'],
+                'Active': market_is_active(v),
+                **(
+                    {'Is pair': exchange.market_is_tradable(v)}
+                    if not pairs_only
+                    else {}
+                ),
+            }
+            for _, v in pairs.items()
+        ]
 
         if (args.get('print_one_column', False) or
                 args.get('list_pairs_print_json', False) or

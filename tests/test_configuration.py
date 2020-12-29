@@ -29,8 +29,7 @@ from tests.conftest import log_has, log_has_re, patched_configuration_load_confi
 @pytest.fixture(scope="function")
 def all_conf():
     config_file = Path(__file__).parents[1] / "config_full.json.example"
-    conf = load_config_file(str(config_file))
-    return conf
+    return load_config_file(str(config_file))
 
 
 def test_load_config_missing_attributes(default_conf) -> None:
@@ -601,7 +600,7 @@ def test_remove_credentials(default_conf, caplog) -> None:
     conf['dry_run'] = False
     remove_credentials(conf)
 
-    assert conf['dry_run'] is True
+    assert conf['dry_run']
     assert conf['exchange']['key'] == ''
     assert conf['exchange']['secret'] == ''
     assert conf['exchange']['password'] == ''
@@ -734,11 +733,11 @@ def test_set_loggers_journald_importerror(mocker, import_fails):
     orig_handlers = logger.handlers
     logger.handlers = []
 
-    config = {'verbosity': 2,
-              'logfile': 'journald',
-              }
     with pytest.raises(OperationalException,
-                       match=r'You need the systemd python package.*'):
+                           match=r'You need the systemd python package.*'):
+        config = {'verbosity': 2,
+                  'logfile': 'journald',
+                  }
         setup_logging(config)
     logger.handlers = orig_handlers
 

@@ -154,25 +154,22 @@ def generate_strategy_metrics(all_results: Dict) -> List[Dict]:
     :return: List of Dicts containing the metrics per Strategy
     """
 
-    tabular_data = []
-    for strategy, results in all_results.items():
-        tabular_data.append(_generate_result_line(
-            results['results'], results['config']['max_open_trades'], strategy)
-            )
-    return tabular_data
+    return [
+        _generate_result_line(
+            results['results'], results['config']['max_open_trades'], strategy
+        )
+        for strategy, results in all_results.items()
+    ]
 
 
 def generate_edge_table(results: dict) -> str:
 
     floatfmt = ('s', '.10g', '.2f', '.2f', '.2f', '.2f', 'd', 'd', 'd')
-    tabular_data = []
     headers = ['Pair', 'Stoploss', 'Win Rate', 'Risk Reward Ratio',
                'Required Risk Reward', 'Expectancy', 'Total Number of Trades',
                'Average Duration (min)']
 
-    for result in results.items():
-        if result[1].nb_trades > 0:
-            tabular_data.append([
+    tabular_data = [[
                 result[0],
                 result[1].stoploss,
                 result[1].winrate,
@@ -181,8 +178,7 @@ def generate_edge_table(results: dict) -> str:
                 result[1].expectancy,
                 result[1].nb_trades,
                 round(result[1].avg_trade_duration)
-            ])
-
+            ] for result in results.items() if result[1].nb_trades > 0]
     # Ignore type as floatfmt does allow tuples but mypy does not know that
     return tabulate(tabular_data, headers=headers,
                     floatfmt=floatfmt, tablefmt="orgtbl", stralign="right")  # type: ignore
@@ -400,42 +396,42 @@ def text_table_strategy(strategy_results, stake_currency: str) -> str:
 
 
 def text_table_add_metrics(strat_results: Dict) -> str:
-    if len(strat_results['trades']) > 0:
-        best_trade = max(strat_results['trades'], key=lambda x: x['profit_percent'])
-        worst_trade = min(strat_results['trades'], key=lambda x: x['profit_percent'])
-        metrics = [
-            ('Backtesting from', strat_results['backtest_start'].strftime(DATETIME_PRINT_FORMAT)),
-            ('Backtesting to', strat_results['backtest_end'].strftime(DATETIME_PRINT_FORMAT)),
-            ('Max open trades', strat_results['max_open_trades']),
-            ('', ''),  # Empty line to improve readability
-            ('Total trades', strat_results['total_trades']),
-            ('Total Profit %', f"{round(strat_results['profit_total'] * 100, 2)}%"),
-            ('Trades per day', strat_results['trades_per_day']),
-            ('', ''),  # Empty line to improve readability
-            ('Best Pair', f"{strat_results['best_pair']['key']} "
-                          f"{round(strat_results['best_pair']['profit_sum_pct'], 2)}%"),
-            ('Worst Pair', f"{strat_results['worst_pair']['key']} "
-                           f"{round(strat_results['worst_pair']['profit_sum_pct'], 2)}%"),
-            ('Best trade', f"{best_trade['pair']} {round(best_trade['profit_percent'] * 100, 2)}%"),
-            ('Worst trade', f"{worst_trade['pair']} "
-                            f"{round(worst_trade['profit_percent'] * 100, 2)}%"),
-
-            ('Best day', f"{round(strat_results['backtest_best_day'] * 100, 2)}%"),
-            ('Worst day', f"{round(strat_results['backtest_worst_day'] * 100, 2)}%"),
-            ('Days win/draw/lose', f"{strat_results['winning_days']} / "
-                f"{strat_results['draw_days']} / {strat_results['losing_days']}"),
-            ('Avg. Duration Winners', f"{strat_results['winner_holding_avg']}"),
-            ('Avg. Duration Loser', f"{strat_results['loser_holding_avg']}"),
-            ('', ''),  # Empty line to improve readability
-            ('Max Drawdown', f"{round(strat_results['max_drawdown'] * 100, 2)}%"),
-            ('Drawdown Start', strat_results['drawdown_start'].strftime(DATETIME_PRINT_FORMAT)),
-            ('Drawdown End', strat_results['drawdown_end'].strftime(DATETIME_PRINT_FORMAT)),
-            ('Market change', f"{round(strat_results['market_change'] * 100, 2)}%"),
-        ]
-
-        return tabulate(metrics, headers=["Metric", "Value"], tablefmt="orgtbl")
-    else:
+    if len(strat_results['trades']) <= 0:
         return ''
+
+    best_trade = max(strat_results['trades'], key=lambda x: x['profit_percent'])
+    worst_trade = min(strat_results['trades'], key=lambda x: x['profit_percent'])
+    metrics = [
+        ('Backtesting from', strat_results['backtest_start'].strftime(DATETIME_PRINT_FORMAT)),
+        ('Backtesting to', strat_results['backtest_end'].strftime(DATETIME_PRINT_FORMAT)),
+        ('Max open trades', strat_results['max_open_trades']),
+        ('', ''),  # Empty line to improve readability
+        ('Total trades', strat_results['total_trades']),
+        ('Total Profit %', f"{round(strat_results['profit_total'] * 100, 2)}%"),
+        ('Trades per day', strat_results['trades_per_day']),
+        ('', ''),  # Empty line to improve readability
+        ('Best Pair', f"{strat_results['best_pair']['key']} "
+                      f"{round(strat_results['best_pair']['profit_sum_pct'], 2)}%"),
+        ('Worst Pair', f"{strat_results['worst_pair']['key']} "
+                       f"{round(strat_results['worst_pair']['profit_sum_pct'], 2)}%"),
+        ('Best trade', f"{best_trade['pair']} {round(best_trade['profit_percent'] * 100, 2)}%"),
+        ('Worst trade', f"{worst_trade['pair']} "
+                        f"{round(worst_trade['profit_percent'] * 100, 2)}%"),
+
+        ('Best day', f"{round(strat_results['backtest_best_day'] * 100, 2)}%"),
+        ('Worst day', f"{round(strat_results['backtest_worst_day'] * 100, 2)}%"),
+        ('Days win/draw/lose', f"{strat_results['winning_days']} / "
+            f"{strat_results['draw_days']} / {strat_results['losing_days']}"),
+        ('Avg. Duration Winners', f"{strat_results['winner_holding_avg']}"),
+        ('Avg. Duration Loser', f"{strat_results['loser_holding_avg']}"),
+        ('', ''),  # Empty line to improve readability
+        ('Max Drawdown', f"{round(strat_results['max_drawdown'] * 100, 2)}%"),
+        ('Drawdown Start', strat_results['drawdown_start'].strftime(DATETIME_PRINT_FORMAT)),
+        ('Drawdown End', strat_results['drawdown_end'].strftime(DATETIME_PRINT_FORMAT)),
+        ('Market change', f"{round(strat_results['market_change'] * 100, 2)}%"),
+    ]
+
+    return tabulate(metrics, headers=["Metric", "Value"], tablefmt="orgtbl")
 
 
 def show_backtest_results(config: Dict, backtest_stats: Dict):

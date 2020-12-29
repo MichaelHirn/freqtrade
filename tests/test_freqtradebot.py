@@ -36,8 +36,7 @@ def patch_RPCManager(mocker) -> MagicMock:
     :return: RPCManager.send_msg MagicMock to track if this method is called
     """
     mocker.patch('freqtrade.rpc.telegram.Telegram', MagicMock())
-    rpc_mock = mocker.patch('freqtrade.freqtradebot.RPCManager.send_msg', MagicMock())
-    return rpc_mock
+    return mocker.patch('freqtrade.freqtradebot.RPCManager.send_msg', MagicMock())
 
 
 # Unit tests
@@ -190,7 +189,7 @@ def test_check_available_stake_amount(default_conf, ticker, mocker, fee, limit_b
 
     freqtrade = FreqtradeBot(default_conf)
 
-    for i in range(0, max_open):
+    for i in range(max_open):
 
         if expected[i] is not None:
             limit_buy_order_open['id'] = str(i)
@@ -723,7 +722,7 @@ def test_create_trade_no_signal(default_conf, fee, mocker) -> None:
     assert not freqtrade.create_trade('ETH/BTC')
 
 
-@pytest.mark.parametrize("max_open", range(0, 5))
+@pytest.mark.parametrize("max_open", range(5))
 @pytest.mark.parametrize("tradable_balance_ratio,modifier", [(1.0, 1), (0.99, 0.8), (0.5, 0.5)])
 def test_create_trades_multiple_trades(default_conf, ticker, fee, mocker, limit_buy_order_open,
                                        max_open, tradable_balance_ratio, modifier) -> None:
@@ -1166,7 +1165,7 @@ def test_add_stoploss_on_exchange(mocker, default_conf, limit_buy_order) -> None
     freqtrade.exit_positions(trades)
     assert trade.stoploss_order_id == '13434334'
     assert stoploss.call_count == 1
-    assert trade.is_open is True
+    assert trade.is_open
 
 
 def test_handle_stoploss_on_exchange(mocker, default_conf, fee, caplog,
@@ -1251,7 +1250,7 @@ def test_handle_stoploss_on_exchange(mocker, default_conf, fee, caplog,
     assert freqtrade.handle_stoploss_on_exchange(trade) is True
     assert log_has_re(r'STOP_LOSS_LIMIT is hit for Trade\(id=1, .*\)\.', caplog)
     assert trade.stoploss_order_id is None
-    assert trade.is_open is False
+    assert not trade.is_open
 
     mocker.patch(
         'freqtrade.exchange.Exchange.stoploss',
@@ -1314,7 +1313,7 @@ def test_handle_sle_cancel_cant_recreate(mocker, default_conf, fee, caplog,
     assert freqtrade.handle_stoploss_on_exchange(trade) is False
     assert log_has_re(r'Stoploss order was cancelled, but unable to recreate one.*', caplog)
     assert trade.stoploss_order_id is None
-    assert trade.is_open is True
+    assert trade.is_open
 
 
 def test_create_stoploss_order_invalid_order(mocker, default_conf, caplog, fee,
@@ -2278,7 +2277,7 @@ def test_check_handle_timedout_sell_usercustom(default_conf, ticker, limit_sell_
     freqtrade.check_handle_timedout()
     assert cancel_order_mock.call_count == 0
     assert rpc_mock.call_count == 0
-    assert open_trade.is_open is False
+    assert not open_trade.is_open
     assert freqtrade.strategy.check_sell_timeout.call_count == 1
 
     freqtrade.strategy.check_sell_timeout = MagicMock(side_effect=KeyError)
@@ -2286,7 +2285,7 @@ def test_check_handle_timedout_sell_usercustom(default_conf, ticker, limit_sell_
     freqtrade.check_handle_timedout()
     assert cancel_order_mock.call_count == 0
     assert rpc_mock.call_count == 0
-    assert open_trade.is_open is False
+    assert not open_trade.is_open
     assert freqtrade.strategy.check_sell_timeout.call_count == 1
 
     # Return True - sells!
@@ -2294,7 +2293,7 @@ def test_check_handle_timedout_sell_usercustom(default_conf, ticker, limit_sell_
     freqtrade.check_handle_timedout()
     assert cancel_order_mock.call_count == 1
     assert rpc_mock.call_count == 1
-    assert open_trade.is_open is True
+    assert open_trade.is_open
     assert freqtrade.strategy.check_sell_timeout.call_count == 1
 
 
@@ -2322,7 +2321,7 @@ def test_check_handle_timedout_sell(default_conf, ticker, limit_sell_order_old, 
     freqtrade.check_handle_timedout()
     assert cancel_order_mock.call_count == 1
     assert rpc_mock.call_count == 1
-    assert open_trade.is_open is True
+    assert open_trade.is_open
     # Custom user sell-timeout is never called
     assert freqtrade.strategy.check_sell_timeout.call_count == 0
 
@@ -2352,7 +2351,7 @@ def test_check_handle_cancelled_sell(default_conf, ticker, limit_sell_order_old,
     freqtrade.check_handle_timedout()
     assert cancel_order_mock.call_count == 0
     assert rpc_mock.call_count == 1
-    assert open_trade.is_open is True
+    assert open_trade.is_open
     assert log_has_re("Sell order cancelled on exchange for Trade.*", caplog)
 
 
@@ -4183,12 +4182,12 @@ def test_get_sell_rate_orderbook_exception(default_conf, mocker, caplog):
     default_conf['ask_strategy']['use_order_book'] = True
     default_conf['ask_strategy']['order_book_min'] = 1
     default_conf['ask_strategy']['order_book_max'] = 2
-    pair = "ETH/BTC"
     # Test What happens if the exchange returns an empty orderbook.
     mocker.patch('freqtrade.exchange.Exchange.fetch_l2_order_book',
                  return_value={'bids': [[]], 'asks': [[]]})
     ft = get_patched_freqtradebot(mocker, default_conf)
     with pytest.raises(PricingError):
+        pair = "ETH/BTC"
         ft.get_sell_rate(pair, True)
     assert log_has("Sell Price at location from orderbook could not be determined.", caplog)
 

@@ -494,22 +494,22 @@ def test_start_new_strategy(mocker, caplog):
 
 
 def test_start_new_strategy_DefaultStrat(mocker, caplog):
-    args = [
-        "new-strategy",
-        "--strategy",
-        "DefaultStrategy"
-    ]
     with pytest.raises(OperationalException,
-                       match=r"DefaultStrategy is not allowed as name\."):
+                           match=r"DefaultStrategy is not allowed as name\."):
+        args = [
+            "new-strategy",
+            "--strategy",
+            "DefaultStrategy"
+        ]
         start_new_strategy(get_args(args))
 
 
 def test_start_new_strategy_no_arg(mocker, caplog):
-    args = [
-        "new-strategy",
-    ]
     with pytest.raises(OperationalException,
-                       match="`new-strategy` requires --strategy to be set."):
+                           match="`new-strategy` requires --strategy to be set."):
+        args = [
+            "new-strategy",
+        ]
         start_new_strategy(get_args(args))
 
 
@@ -536,22 +536,22 @@ def test_start_new_hyperopt(mocker, caplog):
 
 
 def test_start_new_hyperopt_DefaultHyperopt(mocker, caplog):
-    args = [
-        "new-hyperopt",
-        "--hyperopt",
-        "DefaultHyperopt"
-    ]
     with pytest.raises(OperationalException,
-                       match=r"DefaultHyperopt is not allowed as name\."):
+                           match=r"DefaultHyperopt is not allowed as name\."):
+        args = [
+            "new-hyperopt",
+            "--hyperopt",
+            "DefaultHyperopt"
+        ]
         start_new_hyperopt(get_args(args))
 
 
 def test_start_new_hyperopt_no_arg(mocker, caplog):
-    args = [
-        "new-hyperopt",
-    ]
     with pytest.raises(OperationalException,
-                       match="`new-hyperopt` requires --hyperopt to be set."):
+                           match="`new-hyperopt` requires --hyperopt to be set."):
+        args = [
+            "new-hyperopt",
+        ]
         start_new_hyperopt(get_args(args))
 
 

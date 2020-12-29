@@ -97,11 +97,9 @@ class IProtection(LoggingMixin, ABC):
         """
         Get lock end time
         """
-        max_date: datetime = max([trade.close_date for trade in trades])
+        max_date: datetime = max(trade.close_date for trade in trades)
         # comming from Database, tzinfo is not set.
         if max_date.tzinfo is None:
             max_date = max_date.replace(tzinfo=timezone.utc)
 
-        until = max_date + timedelta(minutes=stop_minutes)
-
-        return until
+        return max_date + timedelta(minutes=stop_minutes)

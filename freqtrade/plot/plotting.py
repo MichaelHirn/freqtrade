@@ -314,7 +314,7 @@ def add_areas(fig, row: int, data: pd.DataFrame, indicators) -> make_subplots:
                     'Indicator "%s" ignored. Reason: This indicator is not '
                     'found in your strategy.', indicator
                 )
-            elif indicator_b not in data:
+            else:
                 logger.info(
                         'fill_to: "%s" ignored. Reason: This indicator is not '
                         'in your strategy.', indicator_b

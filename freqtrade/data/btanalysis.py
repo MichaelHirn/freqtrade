@@ -229,28 +229,47 @@ def load_trades_from_db(db_url: str, strategy: Optional[str] = None) -> pd.DataF
     if strategy:
         filters.append(Trade.strategy == strategy)
 
-    trades = pd.DataFrame([(t.pair,
-                            t.open_date.replace(tzinfo=timezone.utc),
-                            t.close_date.replace(tzinfo=timezone.utc) if t.close_date else None,
-                            t.calc_profit(), t.calc_profit_ratio(),
-                            t.open_rate, t.close_rate, t.amount,
-                            (round((t.close_date.timestamp() - t.open_date.timestamp()) / 60, 2)
-                             if t.close_date else None),
-                            t.sell_reason,
-                            t.fee_open, t.fee_close,
-                            t.open_rate_requested,
-                            t.close_rate_requested,
-                            t.stake_amount,
-                            t.max_rate,
-                            t.min_rate,
-                            t.id, t.exchange,
-                            t.stop_loss, t.initial_stop_loss,
-                            t.strategy, t.timeframe
-                            )
-                           for t in Trade.get_trades(filters).all()],
-                          columns=columns)
-
-    return trades
+    return pd.DataFrame(
+        [
+            (
+                t.pair,
+                t.open_date.replace(tzinfo=timezone.utc),
+                t.close_date.replace(tzinfo=timezone.utc)
+                if t.close_date
+                else None,
+                t.calc_profit(),
+                t.calc_profit_ratio(),
+                t.open_rate,
+                t.close_rate,
+                t.amount,
+                (
+                    round(
+                        (t.close_date.timestamp() - t.open_date.timestamp())
+                        / 60,
+                        2,
+                    )
+                    if t.close_date
+                    else None
+                ),
+                t.sell_reason,
+                t.fee_open,
+                t.fee_close,
+                t.open_rate_requested,
+                t.close_rate_requested,
+                t.stake_amount,
+                t.max_rate,
+                t.min_rate,
+                t.id,
+                t.exchange,
+                t.stop_loss,
+                t.initial_stop_loss,
+                t.strategy,
+                t.timeframe,
+            )
+            for t in Trade.get_trades(filters).all()
+        ],
+        columns=columns,
+    )
 
 
 def load_trades(source: str, db_url: str, exportfilename: Path,
@@ -266,8 +285,7 @@ def load_trades(source: str, db_url: str, exportfilename: Path,
     :return: DataFrame containing trades
     """
     if no_trades:
-        df = pd.DataFrame(columns=BT_DATA_COLUMNS)
-        return df
+        return pd.DataFrame(columns=BT_DATA_COLUMNS)
 
     if source == "DB":
         return load_trades_from_db(db_url)
